@@ -134,7 +134,7 @@ const RECIPIENTS = [
   {name:"Aodh O'Donnell, IFPO", email:"aodh.odonnell@ifpo.ie"},
   {name:"Michael Keatinge, Seaview Marine", email:"keatinge@hotmail.com"}
 ];
-const FORM_VERSION = "V1.1 online";
+const FORM_VERSION = "V1.2 online";
 
 /* ---------- form definition (mirrors Consultation Instrument V1.1) ---------- */
 const MONTHS=["J","F","M","A","M","J","J","A","S","O","N","D"];
@@ -446,8 +446,13 @@ function buildText(){
       else if(f.t==="vessel"){const v=val("vessel");add(q,v==="Not on the list"?(val("vessel__other")||v):v);const r=regInfo(S.vessel);if(r)L.push("From the fleet register: "+r.map(([a,b])=>a+" = "+b).join("; "))}
       else if(f.t==="choicetext"||f.t==="choicesel"){const a=val(f.k),d=val(f.k+"__d");if(a||d)L.push(q+": "+[a,d].filter(Boolean).join(". "))}
       else add(q,val(f.k));}
-    if(L.length===head){L.length=before}
+    if(L.length===head){if(s.fields||s.items||s.lc||s.top3)L.push("Not answered");else L.length=before}
   }
+  L.push("");L.push("---- DATA FOR THE COLLATOR (please do not edit below this line) ----");
+  const clean=x=>String(x).replace(/\[/g,"(").replace(/\]/g,")").replace(/\s*\n\s*/g," / ").trim();
+  const D=["[[nisa="+FORM_VERSION+"]]","[[sent="+new Date().toISOString()+"]]"];
+  root.querySelectorAll("[data-k]").forEach(el=>{const k=el.dataset.k;if(D.some(x=>x.startsWith("[["+k+"=")))return;const v=val(k);if(v)D.push("[["+k+"="+clean(v)+"]]")});
+  D.push("[[end]]");L.push(D.join(" "));
   return L.join("\n");
 }
 /* ---------- actions ---------- */
