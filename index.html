@@ -97,6 +97,10 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 .btns{display:flex;flex-wrap:wrap;gap:10px}
 button{font:inherit;font-weight:600;border-radius:4px;padding:11px 16px;border:1px solid var(--sea);background:var(--panel);color:var(--sea);cursor:pointer}
 button.primary{background:var(--buoy);border-color:var(--buoy);color:var(--buoy-ink)}
+.rcpts{display:grid;gap:8px}
+.rcpt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:var(--bg)}
+.rcpt input{width:20px;height:20px;margin-top:2px;flex:none}
+.rcpt .addr{border:0;padding:0;background:none;font-size:13px}
 .addr{font-family:var(--mono);font-size:14px;user-select:all;word-break:break-all;background:var(--bg);border:1px solid var(--line);padding:8px 10px;border-radius:4px}
 .status{font-size:14.5px;color:var(--ok);min-height:1.4em}
 .status.err{color:var(--buoy)}
@@ -115,14 +119,14 @@ section.sec{padding-bottom:4px}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="eyebrow">IS&amp;EFPO · IFPO · Seaview Marine</div>
+  <div class="eyebrow">IS&amp;EFPO · IFPO · Seaview Marine · <span id="verHead">Form V1.6, 17 October 2026</span></div>
   <h1>North Irish Sea Array: Nephrops Trawl Consultation</h1>
   <p>One form per vessel, in short pages. Fill in what applies to you and skip the rest; press <strong>Next</strong> to move on. Your answers are kept on this phone as you go.</p>
 </div></header>
 
 <div class="bar"><div class="wrap">
   <div class="row"><div id="jumpWrap" class="jumpwrap"></div><button type="button" class="home" data-go="0">Page 1</button></div>
-  <div class="row"><div class="meter" aria-hidden="true"><span id="meter"></span></div><small id="count">0 answered</small></div>
+  <div class="row"><div class="meter" aria-hidden="true"><span id="meter"></span></div><small id="count">0 answered</small><small class="ver" id="verBar">V1.6</small></div>
 </div></div>
 
 <main class="wrap" id="form"></main>
@@ -131,10 +135,13 @@ section.sec{padding-bottom:4px}
 /* ---------- settings: the three addresses the answers go to ---------- */
 const RECIPIENTS = [
   {name:"John Lynch, IS&EFPO", email:"isefpo@gmail.com"},
-  {name:"Aodh O'Donnell, IFPO", email:"aodh.odonnell@ifpo.ie"},
-  {name:"Michael Keatinge, Seaview Marine", email:"keatinge@hotmail.com"}
+  {name:"Aodh O'Donnell, IFPO", email:"aodh.odonnell@ifpo.ie"}
 ];
-const FORM_VERSION = "V1.2 online";
+/* a copy always goes to the assessor, as a blind copy; not shown in the list */
+const ASSESSOR="Michael@Mkeatinge.onmicrosoft.com";
+const FORM_VERSION = "V1.6 online";
+const FORM_DATE = "17 October 2026";
+{const v=FORM_VERSION.split(" ")[0];document.getElementById("verHead").textContent="Form "+v+", "+FORM_DATE;document.getElementById("verBar").textContent=v;}
 
 /* ---------- form definition (mirrors Consultation Instrument V1.1) ---------- */
 const MONTHS=["J","F","M","A","M","J","J","A","S","O","N","D"];
@@ -292,7 +299,7 @@ const SECTIONS=[
  {k:"seccode",t:"pair",q:"Your security code (a word and a number)",parts:[{l:"Word",o:["Anchor", "Beacon", "Buoy", "Compass", "Dolphin", "Gannet", "Harbour", "Herring", "Island", "Lighthouse", "Lobster", "Mackerel", "Mussel", "Oyster", "Puffin", "Rudder", "Seal", "Skerry", "Tern", "Tide", "Whale", "Wreck"]},{l:"Number",o:["10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "61", "62", "63", "64", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "76", "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"]}]}
 ]},
 
-{id:"s9",no:"9",title:"Closing questions",fields:[
+{id:"s9",no:"9",title:"Closing questions",html:`<div class="callout"><strong>Note on the scope of this survey.</strong> This survey has been prepared as a stakeholder input to a submission on the proposed North Irish Sea Array (NISA), following An Coimisiún Pleanála's request for further information.<br><br>The completed survey is a useful exercise, but of necessity the questionnaire is limited in scope. It cannot capture in full the potential loss of income and the disruption to fishing activity, both inside and outside the Maritime Area Consent (MAC) area, including the effects on tow lines, tow geometry and transit, and the anticipated loss of access to fishing grounds.<br><br>These considerations are a key concern for this long-established, traditional fishery, and are likely to affect the commercial viability of mobile towed-gear fishing in the north Irish Sea. The planning process requires a further, comprehensive assessment of all impacts outside the MAC area on this fishing métier, at fleet and individual vessel level.</div>`,fields:[
  {k:"close1",t:"textarea",q:"What would make the difference to you during construction, or once the wind farm is running? Anything at all, whether or not it has been offered."},
  {k:"close2",t:"textarea",q:"Is there anything this form has not asked about that matters to your operation?"}
 ]}
@@ -364,8 +371,8 @@ function render(){
     h+=`</div><div class="nav">${idx>0?`<button type="button" data-go="${idx-1}">Back</button>`:"<span></span>"}<span class="pos">Page ${idx+1} of ${SECTIONS.length+1}</span><button type="button" class="primary" data-go="${idx+1}">${idx===SECTIONS.length-1?"Finish and send":"Next"}</button></div></section>`;
   }
   h+=`<div class="send step" id="send" data-step="${SECTIONS.length}" hidden><h2>Send answers</h2>
-  <p class="note">Press <strong>Send answers</strong> to open an email to the three people below with your answers already written in. Check it, then press send in your email app. If no email opens, press <strong>Copy answers</strong> and paste them into an email or a WhatsApp message to any of them.</p>
-  <div class="addr" id="addrs"></div>
+  <p class="note">Press <strong>Send answers</strong> to open an email to the people ticked below with your answers already written in. Check it, then press send in your email app. If no email opens, press <strong>Copy answers</strong> and paste them into an email or a WhatsApp message to any of them.</p>
+  <fieldset class="q" style="border:0;padding:0;margin:0"><legend class="lab" style="padding:0">Send my answers to</legend><div id="rcpts" class="rcpts"></div><p class="note" style="font-size:13.5px">Both are ticked to start with; untick either if you prefer. At least one must stay ticked. A copy is always sent to the independent assessor (Seaview Marine) for the analysis.</p></fieldset>
   <div class="btns"><button class="primary" type="button" id="btnSend">Send answers</button><button type="button" id="btnCopy">Copy answers</button><button type="button" id="btnSave" hidden>Save a copy</button><button type="button" id="btnClear">Clear the form</button></div>
   <div class="status" id="status" role="status"></div>
   <div id="confirmClear" hidden class="callout">Clear every answer on this device? This cannot be undone. <div class="btns" style="margin-top:8px"><button type="button" id="yesClear">Yes, clear</button><button type="button" id="noClear">Keep my answers</button></div></div>
@@ -374,8 +381,7 @@ function render(){
   <div class="nav" style="padding:0"><button type="button" data-go="${SECTIONS.length-1}">Back</button><span class="pos">Page ${SECTIONS.length+1} of ${SECTIONS.length+1}</span><span></span></div></div>`;
   document.getElementById("jumpWrap").innerHTML=`<div class="jump"><label for="jumpSel" class="saved">Go to page</label><select id="jumpSel">${SECTIONS.map((x,i)=>`<option value="${i}" data-t="${i+1}. ${esc(x.title)}">${i+1}. ${esc(x.title)}</option>`).join("")}<option value="${SECTIONS.length}">${SECTIONS.length+1}. Send answers</option></select></div>`;
   root.innerHTML=h;
-  document.getElementById("addrs").textContent=RECIPIENTS.map(r=>r.name+" <"+r.email+">").join("\n");
-  document.getElementById("addrs").style.whiteSpace="pre-line";
+  document.getElementById("rcpts").innerHTML=RECIPIENTS.map((r,i)=>`<label class="rcpt"><input type="checkbox" id="rc_${i}" data-rc="${i}" ${toIdx().includes(i)?"checked":""}><span><b>${esc(r.name)}</b><br><span class="addr">${esc(r.email)}</span></span></label>`).join("");
   // restore
   root.querySelectorAll("[data-k]").forEach(el=>{
     const v=S[el.dataset.k];
@@ -435,6 +441,7 @@ function buildText(){
   L.push("NISA NEPHROPS TRAWL CONSULTATION ("+FORM_VERSION+")");
   L.push("Sent "+new Date().toLocaleString());
   L.push("CONFIDENTIAL: for the IS&EFPO, the IFPO and Seaview Marine only.");
+  L.push("Sent to: "+chosen().map(r=>r.name).join("; "));
   {const w=val("seccode__0"),n=val("seccode__1");L.push("Security code: "+((w||n)?[w,n].filter(Boolean).join(" "):"not given")+" (PO to phone the vessel on the number it holds and ask for this code)");}
   for(const s of SECTIONS){
     const before=L.length; L.push("");L.push("== "+(s.lab?"":(s.no?("SECTION "+s.no+": "):""))+s.title.toUpperCase()+" ==");const head=L.length;
@@ -450,7 +457,7 @@ function buildText(){
   }
   L.push("");L.push("---- DATA FOR THE COLLATOR (please do not edit below this line) ----");
   const clean=x=>String(x).replace(/\[/g,"(").replace(/\]/g,")").replace(/\s*\n\s*/g," / ").trim();
-  const D=["[[nisa="+FORM_VERSION+"]]","[[sent="+new Date().toISOString()+"]]"];
+  const D=["[[nisa="+FORM_VERSION+"]]","[[sent="+new Date().toISOString()+"]]","[[to="+clean(chosen().map(r=>r.email).join(", "))+"]]"];
   root.querySelectorAll("[data-k]").forEach(el=>{const k=el.dataset.k;if(D.some(x=>x.startsWith("[["+k+"=")))return;const v=val(k);if(v)D.push("[["+k+"="+clean(v)+"]]")});
   D.push("[[end]]");L.push(D.join(" "));
   return L.join("\n");
@@ -458,11 +465,15 @@ function buildText(){
 /* ---------- actions ---------- */
 function status(msg,err){const s=document.getElementById("status");s.textContent=msg;s.className="status"+(err?" err":"")}
 function refreshPreview(){document.getElementById("preview").textContent=buildText()}
+function toIdx(){const all=RECIPIENTS.map((_,j)=>j);const t=(S._to||[]).filter(i=>i<RECIPIENTS.length);return t.length?t:all}
+function chosen(){return RECIPIENTS.filter((r,i)=>{const c=document.getElementById("rc_"+i);return c?c.checked:true})}
 function wire(){
+  document.getElementById("rcpts").addEventListener("change",e=>{const b=e.target.closest("[data-rc]");if(!b)return;const on=RECIPIENTS.map((_,i)=>i).filter(i=>document.getElementById("rc_"+i).checked);if(!on.length){b.checked=true;status("At least one person must stay ticked.",true);return}S._to=on;save();refreshPreview()});
   document.getElementById("btnSend").addEventListener("click",()=>{
     const body=buildText();refreshPreview();
     const vessel=(val("vessel")==="Not on the list"?val("vessel__other"):val("vessel").split(",")[0])||"vessel";
-    const href="mailto:"+RECIPIENTS.map(r=>r.email).join(",")+"?subject="+encodeURIComponent("NISA Nephrops consultation: "+vessel)+"&body="+encodeURIComponent(body);
+    const to=chosen();if(!to.length){status("Tick at least one person to send to.",true);return}
+    const href="mailto:"+to.map(r=>r.email).join(",")+"?bcc="+encodeURIComponent(ASSESSOR)+"&subject="+encodeURIComponent("NISA Nephrops consultation: "+vessel)+"&body="+encodeURIComponent(body);
     try{location.href=href}catch(e){}
     status("If your email app opened, check the message and press send there. If nothing opened, press Copy answers and paste them into an email or WhatsApp message to the addresses above.");
   });
