@@ -37,7 +37,9 @@ header.top p{margin:0;max-width:60ch;opacity:.92}
 .bar .row{display:flex;gap:10px;align-items:center;min-width:0}
 .jumpwrap{flex:1;min-width:0}
 .bar .jump{margin-top:0;flex-wrap:nowrap}
-.bar .jump label{white-space:nowrap}
+.bar .jump label{white-space:nowrap;font-family:var(--display);font-weight:700;font-size:14px;color:var(--ink)}
+.bar .jump select{border:2px solid var(--buoy);background:var(--sea-soft);color:var(--ink);font-weight:600;font-size:16px;padding:10px 12px;box-shadow:0 0 0 3px color-mix(in srgb,var(--buoy) 22%,transparent)}
+.bar .jump select:focus-visible{outline:3px solid var(--buoy);outline-offset:2px}
 .meter{flex:1;height:8px;background:var(--sea-soft);border-radius:4px;overflow:hidden;min-width:0}
 .meter span{display:block;height:100%;background:var(--sea);width:0;transition:width .3s}
 .bar small{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
@@ -121,14 +123,14 @@ section.sec{padding-bottom:4px}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="eyebrow">IS&amp;EFPO · IFPO · Seaview Marine · <span id="verHead">Form V1.8, 18 October 2026</span></div>
+  <div class="eyebrow">IS&amp;EFPO · IFPO · Seaview Marine · <span id="verHead">Form V1.9, 18 October 2026</span></div>
   <h1>North Irish Sea Array: Nephrops Trawl Consultation</h1>
   <p>One form per vessel, in short pages. Fill in what applies to you and skip the rest; press <strong>Next</strong> to move on. Your answers are kept on this phone as you go.</p>
 </div></header>
 
 <div class="bar"><div class="wrap">
   <div class="row"><div id="jumpWrap" class="jumpwrap"></div></div>
-  <div class="row"><div class="meter" aria-hidden="true"><span id="meter"></span></div><small id="count">0 answered</small><small class="ver" id="verBar">V1.8</small></div>
+  <div class="row"><div class="meter" aria-hidden="true"><span id="meter"></span></div><small id="count">0 answered</small><small class="ver" id="verBar">V1.9</small><button type="button" class="home" id="themeBtn">Light mode</button></div>
 </div></div>
 
 <main class="wrap" id="form"></main>
@@ -141,8 +143,16 @@ const RECIPIENTS = [
 ];
 /* a copy always goes to the assessor, as a blind copy; not shown in the list */
 const ASSESSOR="Michael@Mkeatinge.onmicrosoft.com";
-const FORM_VERSION = "V1.8 online";
+const FORM_VERSION = "V1.9 online";
 const FORM_DATE = "18 October 2026";
+/* light / dark switch, remembered on this phone */
+(function(){const R=document.documentElement,K="nisa-theme";
+  const isDark=()=>R.dataset.theme?R.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  const lab=()=>{const b=document.getElementById("themeBtn");if(b)b.textContent=isDark()?"Light mode":"Dark mode"};
+  try{const t=localStorage.getItem(K);if(t)R.dataset.theme=t}catch(e){}
+  lab();matchMedia("(prefers-color-scheme: dark)").addEventListener("change",lab);
+  document.getElementById("themeBtn").addEventListener("click",()=>{const t=isDark()?"light":"dark";R.dataset.theme=t;try{localStorage.setItem(K,t)}catch(e){}lab()});
+})();
 {const v=FORM_VERSION.split(" ")[0];document.getElementById("verHead").textContent="Form "+v+", "+FORM_DATE;document.getElementById("verBar").textContent=v;}
 
 /* ---------- form definition (mirrors Consultation Instrument V1.1) ---------- */
