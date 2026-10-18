@@ -95,6 +95,8 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 .send{margin-top:24px;background:var(--panel);border:2px solid var(--sea);border-radius:6px;padding:18px;display:grid;gap:14px}
 .send h2{font-family:var(--display);font-size:22px;margin:0}
 .btns{display:flex;flex-wrap:wrap;gap:10px}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.x{padding:4px 10px;font-size:13px;margin-left:6px}
 button{font:inherit;font-weight:600;border-radius:4px;padding:11px 16px;border:1px solid var(--sea);background:var(--panel);color:var(--sea);cursor:pointer}
 button.primary{background:var(--buoy);border-color:var(--buoy);color:var(--buoy-ink)}
 .rcpts{display:grid;gap:8px}
@@ -119,14 +121,14 @@ section.sec{padding-bottom:4px}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="eyebrow">IS&amp;EFPO · IFPO · Seaview Marine · <span id="verHead">Form V1.7, 17 October 2026</span></div>
+  <div class="eyebrow">IS&amp;EFPO · IFPO · Seaview Marine · <span id="verHead">Form V1.8, 18 October 2026</span></div>
   <h1>North Irish Sea Array: Nephrops Trawl Consultation</h1>
   <p>One form per vessel, in short pages. Fill in what applies to you and skip the rest; press <strong>Next</strong> to move on. Your answers are kept on this phone as you go.</p>
 </div></header>
 
 <div class="bar"><div class="wrap">
-  <div class="row"><div id="jumpWrap" class="jumpwrap"></div><button type="button" class="home" data-go="0">Page 1</button></div>
-  <div class="row"><div class="meter" aria-hidden="true"><span id="meter"></span></div><small id="count">0 answered</small><small class="ver" id="verBar">V1.7</small></div>
+  <div class="row"><div id="jumpWrap" class="jumpwrap"></div></div>
+  <div class="row"><div class="meter" aria-hidden="true"><span id="meter"></span></div><small id="count">0 answered</small><small class="ver" id="verBar">V1.8</small></div>
 </div></div>
 
 <main class="wrap" id="form"></main>
@@ -139,8 +141,8 @@ const RECIPIENTS = [
 ];
 /* a copy always goes to the assessor, as a blind copy; not shown in the list */
 const ASSESSOR="Michael@Mkeatinge.onmicrosoft.com";
-const FORM_VERSION = "V1.7 online";
-const FORM_DATE = "17 October 2026";
+const FORM_VERSION = "V1.8 online";
+const FORM_DATE = "18 October 2026";
 {const v=FORM_VERSION.split(" ")[0];document.getElementById("verHead").textContent="Form "+v+", "+FORM_DATE;document.getElementById("verBar").textContent=v;}
 
 /* ---------- form definition (mirrors Consultation Instrument V1.1) ---------- */
@@ -374,9 +376,10 @@ function render(){
     h+=`</div><div class="nav">${idx>0?`<button type="button" data-go="${idx-1}">Back</button>`:"<span></span>"}<span class="pos">Page ${idx+1} of ${SECTIONS.length+1}</span><button type="button" class="primary" data-go="${idx+1}">${idx===SECTIONS.length-1?"Finish and send":"Next"}</button></div></section>`;
   }
   h+=`<div class="send step" id="send" data-step="${SECTIONS.length}" hidden><h2>Send answers</h2>
-  <p class="note">Press <strong>Send answers</strong> to open an email to the people ticked below with your answers already written in. Check it, then press send in your email app. If no email opens, press <strong>Copy answers</strong> and paste them into an email or a WhatsApp message to any of them.</p>
+  <p class="note">Press <strong>Send answers</strong> to open an email to the people ticked below with your answers already written in. Check it, then press send in your email app. If no email opens, press <strong>Save a copy</strong> and attach the file to an email or WhatsApp message to any of them. <strong>Clear the form</strong> becomes available once you have saved a copy.</p>
   <fieldset class="q" style="border:0;padding:0;margin:0"><legend class="lab" style="padding:0">Send my answers to</legend><div id="rcpts" class="rcpts"></div><p class="note" style="font-size:13.5px">Both are ticked to start with; untick either if you prefer. At least one must stay ticked. A copy is always sent to the independent assessor (Seaview Marine) for the analysis.</p></fieldset>
-  <div class="btns"><button class="primary" type="button" id="btnSend">Send answers</button><button type="button" id="btnCopy">Copy answers</button><button type="button" id="btnSave" hidden>Save a copy</button><button type="button" id="btnClear">Clear the form</button></div>
+  <div class="btns"><button type="button" id="btnSave">Save a copy</button><button class="primary" type="button" id="btnSend">Send answers</button><button type="button" id="btnClear" disabled title="Save a copy first">Clear the form</button></div>
+  <div id="sendCheck" class="callout" hidden></div>
   <div class="status" id="status" role="status"></div>
   <div id="confirmClear" hidden class="callout">Clear every answer on this device? This cannot be undone. <div class="btns" style="margin-top:8px"><button type="button" id="yesClear">Yes, clear</button><button type="button" id="noClear">Keep my answers</button></div></div>
   <details><summary class="saved">Show the answers as they will be sent</summary><pre class="out" id="preview"></pre></details>
@@ -470,28 +473,46 @@ function status(msg,err){const s=document.getElementById("status");s.textContent
 function refreshPreview(){document.getElementById("preview").textContent=buildText()}
 function toIdx(){const all=RECIPIENTS.map((_,j)=>j);const t=(S._to||[]).filter(i=>i<RECIPIENTS.length);return t.length?t:all}
 function chosen(){return RECIPIENTS.filter((r,i)=>{const c=document.getElementById("rc_"+i);return c?c.checked:true})}
+function updClear(){const b=document.getElementById("btnClear");if(b)b.disabled=!S._saved}
 function wire(){
   document.getElementById("rcpts").addEventListener("change",e=>{const b=e.target.closest("[data-rc]");if(!b)return;const on=RECIPIENTS.map((_,i)=>i).filter(i=>document.getElementById("rc_"+i).checked);if(!on.length){b.checked=true;status("At least one person must stay ticked.",true);return}S._to=on;save();refreshPreview()});
-  document.getElementById("btnSend").addEventListener("click",()=>{
+  const doSend=()=>{
+    document.getElementById("sendCheck").hidden=true;
     const body=buildText();refreshPreview();
     const vessel=(val("vessel")==="Not on the list"?val("vessel__other"):val("vessel").split(",")[0])||"vessel";
     const to=chosen();if(!to.length){status("Tick at least one person to send to.",true);return}
     const href="mailto:"+to.map(r=>r.email).join(",")+"?bcc="+encodeURIComponent(ASSESSOR)+"&subject="+encodeURIComponent("NISA Nephrops consultation: "+vessel)+"&body="+encodeURIComponent(body);
     try{location.href=href}catch(e){}
-    status("If your email app opened, check the message and press send there. If nothing opened, press Copy answers and paste them into an email or WhatsApp message to the addresses above.");
-  });
-  document.getElementById("btnCopy").addEventListener("click",async()=>{
-    const body=buildText();refreshPreview();
-    try{await navigator.clipboard.writeText(body);status("Answers copied. Paste them into an email or WhatsApp message to the addresses above.")}
-    catch(e){const d=document.querySelector("#send details");d.open=true;const r=document.createRange();r.selectNodeContents(document.getElementById("preview"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);status("Your device would not copy automatically. The answers are selected below; use your device's Copy.",true)}
+    status("If your email app opened, check the message and press send there. If nothing opened, press Save a copy and attach the file to an email or WhatsApp message.");
+  };
+  document.getElementById("btnSend").addEventListener("click",()=>{
+    const pg=id=>SECTIONS.findIndex(x=>x.id===id);const miss=[];
+    if(!val("vessel"))miss.push(["your vessel",pg("s1")]);
+    if(!val("seccode__0")||!val("seccode__1"))miss.push(["your security code",pg("s8")]);
+    if(!val("con_name"))miss.push(["your typed name",pg("s8")]);
+    if(val("con_read")!=="Yes")miss.push(["confirming you have read the data protection statement",pg("s8")]);
+    const empty=SECTIONS.filter((x,i)=>i>0&&(x.fields||x.items||x.lc||x.top3)&&!Object.keys(S).some(k=>filled(S[k])&&document.querySelector(`#${x.id} [data-k="${CSS.escape(k)}"]`))).length;
+    if(!miss.length){doSend();return}
+    const box=document.getElementById("sendCheck");
+    box.innerHTML=`<strong>Before you send.</strong> Your answers can be sent as they are, even if some pages are not finished${empty?` (${empty} page${empty>1?"s have":" has"} no answers yet)`:""}. But these are needed to use them:<ul class="guide">${miss.map(([t,i])=>`<li>${t} <button type="button" class="x" data-go="${i}">Go to page ${i+1}</button></li>`).join("")}</ul><div class="btns" style="margin-top:8px"><button type="button" class="primary" id="sendAnyway">Send anyway</button></div>`;
+    box.hidden=false;document.getElementById("sendAnyway").onclick=doSend;
   });
   document.getElementById("btnClear").addEventListener("click",()=>{document.getElementById("confirmClear").hidden=false});
   document.getElementById("noClear").addEventListener("click",()=>{document.getElementById("confirmClear").hidden=true});
   document.getElementById("yesClear").addEventListener("click",()=>{S={};try{localStorage.removeItem(KEY)}catch(e){}render();wire();progress();status("The form has been cleared.")});
   document.querySelector("#send details").addEventListener("toggle",refreshPreview);
-  // optional download through the downloads capability
-  (async()=>{try{const dl=window.claude&&await window.claude.use("downloads");if(!dl)return;const b=document.getElementById("btnSave");b.hidden=false;
-    b.onclick=async()=>{try{await dl.save({filename:"NISA-consultation-"+((val("vessel")||"vessel").split(",")[0]).replace(/[^A-Za-z0-9-]+/g,"-")+".txt",data:buildText()});status("Copy saved. You can attach it to an email.")}catch(e){status("The copy was not saved.",true)}}}catch(e){}})();
+  // Save a copy: Claude downloads capability when present, otherwise an ordinary browser download
+  let DLc=null;(async()=>{try{DLc=window.claude&&await window.claude.use("downloads")}catch(e){DLc=null}})();
+  document.getElementById("btnSave").addEventListener("click",async()=>{
+    const text=buildText();refreshPreview();
+    const name="NISA-consultation-"+((val("vessel")||"vessel").split(",")[0]).replace(/[^A-Za-z0-9-]+/g,"-").replace(/-+$/,"")+"-"+new Date().toISOString().slice(0,10)+".txt";
+    try{
+      if(DLc){await DLc.save({filename:name,data:text})}
+      else{const u=URL.createObjectURL(new Blob([text],{type:"text/plain"}));const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}
+      S._saved=true;save();updClear();status("A copy has been saved to this device as \u201c"+name+"\u201d.");
+    }catch(e){status("The copy was not saved.",true)}
+  });
+  updClear();
 }
 render();wire();progress();
 </script>
