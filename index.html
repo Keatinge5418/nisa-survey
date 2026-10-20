@@ -123,7 +123,7 @@ section.sec{padding-bottom:4px}
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="eyebrow">Seafood Industry Alliance · Seaview Marine · <span id="verHead">Form V2.1, 19 October 2026</span></div>
+  <div class="eyebrow">Seafood Industry Alliance · Seaview Marine · <span id="verHead">Form V2.2, 20 October 2026</span></div>
   <h1>North Irish Sea Array: Nephrops Trawl Consultation</h1>
   <p>One form per vessel, in short pages. Fill in what applies to you and skip the rest; press <strong>Next</strong> to move on. Your answers are kept on this phone as you go.</p>
 </div></header>
@@ -144,10 +144,10 @@ const RECIPIENTS = [
   {name:"Dominic Rihan, KFO", email:"dominic@kfo.ie"},
   {name:"Brendan Byrne, IFPEA", email:"brendanbyrne@ifpea.ie"}
 ];
-/* a copy always goes to the assessor, as a blind copy; not shown in the list */
+/* the assessor is always included, openly in the To line */
 const ASSESSOR="Michael@Mkeatinge.onmicrosoft.com";
-const FORM_VERSION = "V2.1 online";
-const FORM_DATE = "19 October 2026";
+const FORM_VERSION = "V2.2 online";
+const FORM_DATE = "20 October 2026";
 /* light / dark switch, remembered on this phone */
 (function(){const R=document.documentElement,K="nisa-theme";
   const isDark=()=>R.dataset.theme?R.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
@@ -390,7 +390,7 @@ function render(){
   }
   h+=`<div class="send step" id="send" data-step="${SECTIONS.length}" hidden><h2>Send answers</h2>
   <p class="note">Press <strong>Send answers</strong> to open an email to the people ticked below with your answers already written in. Check it, then press send in your email app. If no email opens, press <strong>Save a copy</strong> and attach the file to an email or WhatsApp message to any of them. <strong>Clear the form</strong> becomes available once you have saved a copy.</p>
-  <fieldset class="q" style="border:0;padding:0;margin:0"><legend class="lab" style="padding:0">Send my answers to</legend><div id="rcpts" class="rcpts"></div><p class="note" style="font-size:13.5px">Both are ticked to start with; untick either if you prefer. At least one must stay ticked. A copy is always sent to the independent assessor (Seaview Marine) for the analysis.</p></fieldset>
+  <fieldset class="q" style="border:0;padding:0;margin:0"><legend class="lab" style="padding:0">Send my answers to</legend><div id="rcpts" class="rcpts"></div><p class="note" style="font-size:13.5px">Seaview Marine, the independent assessor, is always included. John Lynch and Aodh O'Donnell are ticked to start with; tick or untick the others as you prefer. At least one organisation must stay ticked.</p></fieldset>
   <div class="btns"><button type="button" id="btnSave">Save a copy</button><button class="primary" type="button" id="btnSend">Send answers</button><button type="button" id="btnClear" disabled title="Save a copy first">Clear the form</button></div>
   <div id="sendCheck" class="callout" hidden></div>
   <div class="status" id="status" role="status"></div>
@@ -400,7 +400,7 @@ function render(){
   <div class="nav" style="padding:0"><button type="button" data-go="${SECTIONS.length-1}">Back</button><span class="pos">Page ${SECTIONS.length+1} of ${SECTIONS.length+1}</span><span></span></div></div>`;
   document.getElementById("jumpWrap").innerHTML=`<div class="jump"><label for="jumpSel" class="saved">Go to page</label><select id="jumpSel">${SECTIONS.map((x,i)=>`<option value="${i}" data-t="${i+1}. ${esc(x.title)}">${i+1}. ${esc(x.title)}</option>`).join("")}<option value="${SECTIONS.length}">${SECTIONS.length+1}. Send answers</option></select></div>`;
   root.innerHTML=h;
-  document.getElementById("rcpts").innerHTML=RECIPIENTS.map((r,i)=>`<label class="rcpt"><input type="checkbox" id="rc_${i}" data-rc="${i}" ${toIdx().includes(i)?"checked":""}><span><b>${esc(r.name)}</b><br><span class="addr">${esc(r.email)}</span></span></label>`).join("");
+  document.getElementById("rcpts").innerHTML=`<label class="rcpt"><input type="checkbox" checked disabled><span><b>Seaview Marine (independent assessor), always included</b><br><span class="addr">${esc(ASSESSOR)}</span></span></label>`+RECIPIENTS.map((r,i)=>`<label class="rcpt"><input type="checkbox" id="rc_${i}" data-rc="${i}" ${toIdx().includes(i)?"checked":""}><span><b>${esc(r.name)}</b><br><span class="addr">${esc(r.email)}</span></span></label>`).join("");
   // restore
   root.querySelectorAll("[data-k]").forEach(el=>{
     const v=S[el.dataset.k];
@@ -460,7 +460,7 @@ function buildText(){
   L.push("NISA NEPHROPS TRAWL CONSULTATION ("+FORM_VERSION+")");
   L.push("Sent "+new Date().toLocaleString());
   L.push("CONFIDENTIAL: for the Seafood Industry Alliance and Seaview Marine only.");
-  L.push("Sent to: "+chosen().map(r=>r.name).join("; "));
+  L.push("Sent to: "+chosen().map(r=>r.name).concat("Seaview Marine (independent assessor)").join("; "));
   {const w=val("seccode__0"),n=val("seccode__1");L.push("Security code: "+((w||n)?[w,n].filter(Boolean).join(" "):"not given")+" (PO to phone the vessel on the number it holds and ask for this code)");}
   for(const s of SECTIONS){
     const before=L.length; L.push("");L.push("== "+(s.lab?"":(s.no?("SECTION "+s.no+": "):""))+s.title.toUpperCase()+" ==");const head=L.length;
@@ -476,7 +476,7 @@ function buildText(){
   }
   L.push("");L.push("---- DATA FOR THE COLLATOR (please do not edit below this line) ----");
   const clean=x=>String(x).replace(/\[/g,"(").replace(/\]/g,")").replace(/\s*\n\s*/g," / ").trim();
-  const D=["[[nisa="+FORM_VERSION+"]]","[[sent="+new Date().toISOString()+"]]","[[to="+clean(chosen().map(r=>r.email).join(", "))+"]]"];
+  const D=["[[nisa="+FORM_VERSION+"]]","[[sent="+new Date().toISOString()+"]]","[[to="+clean(chosen().map(r=>r.email).concat(ASSESSOR).join(", "))+"]]"];
   root.querySelectorAll("[data-k]").forEach(el=>{const k=el.dataset.k;if(D.some(x=>x.startsWith("[["+k+"=")))return;const v=val(k);if(v)D.push("[["+k+"="+clean(v)+"]]")});
   D.push("[[end]]");L.push(D.join(" "));
   return L.join("\n");
@@ -494,7 +494,7 @@ function wire(){
     const body=buildText();refreshPreview();
     const vessel=(val("vessel")==="Not on the list"?val("vessel__other"):val("vessel").split(",")[0])||"vessel";
     const to=chosen();if(!to.length){status("Tick at least one person to send to.",true);return}
-    const href="mailto:"+to.map(r=>r.email).join(",")+"?bcc="+encodeURIComponent(ASSESSOR)+"&subject="+encodeURIComponent("NISA Nephrops consultation: "+vessel)+"&body="+encodeURIComponent(body);
+    const href="mailto:"+to.map(r=>r.email).concat(ASSESSOR).join(",")+"?subject="+encodeURIComponent("NISA Nephrops consultation: "+vessel)+"&body="+encodeURIComponent(body);
     try{location.href=href}catch(e){}
     status("If your email app opened, check the message and press send there. If nothing opened, press Save a copy and attach the file to an email or WhatsApp message.");
   };
@@ -529,6 +529,7 @@ function wire(){
 }
 render();wire();progress();
 </script>
+
 
 </body>
 </html>
